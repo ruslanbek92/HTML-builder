@@ -26,7 +26,7 @@ fs.readdir('./06-build-page/components', {withFileTypes: true}, (err, files)=>{
         templStr = templStr.replace(`{{${arr[i].name}}}`, arr[i].content);
        }
 
-       fs.promises.mkdir('./06-build-page/project-dist')
+       fs.promises.mkdir('./06-build-page/project-dist', {recursive:true})
        .then(() => {
         fs.writeFile('./06-build-page/project-dist/index.html', templStr, ()=>{'writing finished!'});
         }
