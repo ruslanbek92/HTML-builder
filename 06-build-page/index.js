@@ -5,11 +5,7 @@ const readable = fs.createReadStream('./06-build-page/template.html');
 let templStr = ''
 
 readable.on('data',(data) => {
-  templStr += data.toString(); 
-});
-
-readable.on('end', ()=> {
-
+  templStr += data.toString();
 });
 
 fs.readdir('./06-build-page/components', {withFileTypes: true}, (err, files)=>{
@@ -78,36 +74,49 @@ fs.readdir('./06-build-page/components', {withFileTypes: true}, (err, files)=>{
 //  copy assets
     fs.mkdir('./06-build-page/project-dist/assets', {recursive:true}, (err)=>{
         if(err)return console.error(err.message);
-        fs.promises.readdir('./06-build-page/project-dist/assets').then(
-         (files) => {
-            const deleteFiles= async (dir)=>{
-                for (let i = 0; i < files.length; i++) {
-                 await fs.promises.unlink(`${dir}/${files[i]}`);
+        fs.promises.readdir('./06-build-page/project-dist/assets', {withFileTypes:true}).then((files)=>{
+            async function delFilesAndDirs(arr){
+                for (let i = 0; i < arr.length; i++) {
+                    if (arr[i].isFile()) {
+                    await fs.promises.unlink(`./06-build-page/project-dist/assets/${arr[i].name}`);
+                    } else {
+                     await fs.promises.rmdir(`./06-build-page/project-dist/assets/${arr[i].name}`, {recursive:true})   
+                    }  
                 }
             }
-               deleteFiles('./06-build-page/project-dist/assets')
-               .then(() => {
-                fs.promises.readdir(`./06-build-page/assets`)
-                .then((files)=>{
-                async function copyFiles(){
-                    for(let i = 0; i < files.length; i++) {
-                        await fs.promises.copyFile(`./06-build-page/assets/${files[i]}`,`./06-build-page/project-dist/assets/${files[i]}`); 
-                    }
+
+            delFilesAndDirs(files)
+            .then(()=>{
+                 async function copyRecursively(src, dest) {
+                    fs.promises.readdir(src, {withFileTypes:true})
+                    .then(async (files) =>{
+                        console.log('files', files);
+                        for (let i = 0; i < files.length; i++) {
+                            if (files[i].isFile()) {
+                                console.log('is file ');
+                                 await fs.promises.copyFile(`${src}/${files[i].name}`, `${dest}/${files[i].name}`)
+                                .then(() => {
+                                    console.log('file copied!', `${dest}/${files[i].name}`)
+                                    return;
+                                });
+                                
+                            } else {
+                             await  fs.promises.mkdir(`${dest}/${files[i].name}`)
+                              .then(async ()=>{
+                                console.log('dir  created !', `${dest}/${files[i].name}`)
+                               await copyRecursively(`${src}/${files[i].name}`, `${dest}/${files[i].name}`);
+                              });  
+                            }
+                            
+                        }
+                    });
                 }
-                copyFiles(); 
-                })
-                .catch(()=>{console.log('error in reading files')})
-                
-               }
-               
-               );
-            
-         }
+               copyRecursively(`./06-build-page/assets`, './06-build-page/project-dist/assets');
+            });
+        }
         )
         .catch(()=>{console.log('error')});
     })
-       
-
      });
 
     
