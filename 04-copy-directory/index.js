@@ -1,32 +1,36 @@
 const fs = require('fs');
 
 fs.mkdir('./04-copy-directory/copy-files', {recursive:true}, (err)=>{
-    if(err)return console.error(err.message);
-    fs.promises.readdir('./04-copy-directory/copy-files').then(
-     (files) => {
-        const deleteFiles= async (dir)=>{
-            for (let i = 0; i < files.length; i++) {
-             await fs.promises.unlink(`${dir}/${files[i]}`);
-            }
+  if(err)return console.error(err.message);
+  fs.promises.readdir('./04-copy-directory/copy-files').then(
+    (files) => {
+      const deleteFiles= async (dir)=>{
+        for (let i = 0; i < files.length; i++) {
+          await fs.promises.unlink(`${dir}/${files[i]}`);
         }
-           deleteFiles('./04-copy-directory/copy-files')
-           .then(() => {
-            fs.promises.readdir(`./04-copy-directory/files`)
+      };
+      deleteFiles('./04-copy-directory/copy-files')
+        .then(() => {
+          fs.promises.readdir('./04-copy-directory/files')
             .then((files)=>{
-            async function copyFiles(){
+              async function copyFiles(){
                 for(let i = 0; i < files.length; i++) {
-                    await fs.promises.copyFile(`./04-copy-directory/files/${files[i]}`,`./04-copy-directory/copy-files/${files[i]}`); 
+                  await fs.promises.copyFile(`./04-copy-directory/files/${files[i]}`,`./04-copy-directory/copy-files/${files[i]}`); 
                 }
-            }
-            copyFiles(); 
+              }
+              copyFiles(); 
             })
-            .catch(()=>{console.log('error in reading files')})
+            .catch(()=>{
+              console.log('error in reading files');
+            });
             
-           }
+        }
            
-           );
+        );
         
-     }
-    )
-    .catch(()=>{console.log('error')});
-})
+    }
+  )
+    .catch(()=>{
+      console.log('error');
+    });
+});
